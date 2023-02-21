@@ -160,7 +160,7 @@ def lowshadow(pf, twstrdate, stockname):
             loshadow = (pf.at[twstrdate, "開盤價"] -
                         pf.at[twstrdate, "最低價"]) / pf.at[twstrdate, "開盤價"]
             # print('紅下影線=', loshadow)
-        if loshadow > 0.03:
+        if loshadow > 0.04:
             print(stockname, '有長下影線', round(loshadow, 2))
             ShadowAlert = '有長下影線=', round(loshadow, 2)
     except:
@@ -176,7 +176,7 @@ def kdkpassive(historydata):
     for y in range(1, 5):
         list.append(historydata.at[len(historydata) - y, 'k'])
     # print (list,sum(list))
-    if list[0] > 0.8 and list[1] > 0.8 and list[2] > 0.8 and list[3] < 0.8:
+    if list[0] > 0.8 and list[1] > 0.8 and list[2] > 0.8:
         # print('kd的k值鈍化alert' )
         messeage = '\n', 'KD的k值鈍化alert!!'
     return messeage
