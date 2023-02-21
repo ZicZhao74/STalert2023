@@ -1,2 +1,5 @@
+<<<<<<< HEAD
 new line
 line2
+=======
+>>>>>>> parent of e9dd0df (new line in new.txt)
