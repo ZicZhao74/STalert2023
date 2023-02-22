@@ -1,5 +1,0 @@
-new line
-line2
-test
-after base merge
- main
