@@ -48,6 +48,7 @@ def getprice(historydata, twstrtodate, twstryesdate):
 
     # print (historydata)
     todayprice = historydata.at[twstrtodate, '收盤價']
+    # print('今日價=', todayprice)
     todayprice = float(todayprice)
 
     yesprice = historydata.at[twstryesdate, '收盤價']
@@ -169,6 +170,26 @@ def lowshadow(pf, twstrdate, stockname):
     return ShadowAlert
 
 
+def upshadow(pf, twstrdate, stockname):
+    ShadowAlert = tuple()
+    try:
+        if pf.at[twstrdate, "開盤價"] > pf.at[twstrdate, "收盤價"]:
+            upshadow = (pf.at[twstrdate, "最高價"] -
+                        pf.at[twstrdate, "開盤價"]) / pf.at[twstrdate, "開盤價"]
+            # print('綠下影線=', loshadow)
+        else:
+            upshadow = (pf.at[twstrdate, "最高價"] -
+                        pf.at[twstrdate, "收盤價"]) / pf.at[twstrdate, "開盤價"]
+            # print('紅下影線=', loshadow)
+        if upshadow > 0.03:
+            print(stockname, '有長上影線', round(upshadow, 2))
+            ShadowAlert = '有長上影線=', round(upshadow, 2)
+    except:
+        print(stockname, 'shadow pass')
+        pass
+    return ShadowAlert
+
+
 def kdkpassive(historydata):
     historydata = historydata.reset_index()
     list = []
@@ -229,16 +250,17 @@ for i in range(0, len(fostocklist)):
     periodlow = filtpl(filtday, todate, periodlow)
     twomes = alert(
         stock_no, hisfilename[2], periodhigh, todayprice, yesprice, periodlow)
-    ShadowAlert = lowshadow(historydata, twstrtodate, stock_no+stock_name)
+    loShadowAlert = lowshadow(historydata, twstrtodate, stock_no+stock_name)
+    upShadowAlert = upshadow(historydata, twstrtodate, stock_no+stock_name)
     kdmesseage = kdkpassive(historydata)
-    comMes = twomes + kdmesseage+ShadowAlert
+    comMes = twomes + kdmesseage+loShadowAlert+upShadowAlert
     token = 'YirsvmhRjT15zQMuSrEihN4i3upGFFJaulP9F6ly2EE'
     if len(comMes) > 1:
         stinfo = tuple()
         stinfo = twstrtodate, '\n', stock_no, stock_name, '\n'
         finalMes = stinfo + comMes
         print(finalMes)
-        lineNotifyMessage(token, finalMes)
+        # lineNotifyMessage(token, finalMes)
 
 
 '''

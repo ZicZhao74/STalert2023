@@ -57,13 +57,14 @@ for i in range(0, len(stock_nolist)):  #
 
     # 今日資料僅保留i股票
     filt = newfina['股票代號'] == stock_nolist[i]
+    print(stock_nolist[i])
     thenewfina = pd.DataFrame(newfina.loc[filt])
-    print(thenewfina)
+
     # 重新reset INDEX，使第一欄為0後更改名稱為日期
     thenewfina = thenewfina.reset_index(drop=True)
     thenewfina = thenewfina.rename(index={0: todate})
     count = 0
-    # 刪除重複資料
+    # 刪除同天資料
     try:
         data = data.drop(index=[strtodate])
         count = count+1

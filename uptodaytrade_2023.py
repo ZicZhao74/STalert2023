@@ -126,35 +126,43 @@ for i in range(0, len(stock_nolist)):  # len(stock_nolist)
 
     # 如果有重複資料 直接結束迴圈
     net = ['成交股數', '成交金額', '開盤價']
-    repeat = final.duplicated(subset=net)
+    repeat = final.duplicated(subset=net, keep=False)  # 標註重複資料
+    # print(repeat)
     count = 0
     for r in repeat:
         if r == True:
             # print('repeat')
             count = count+1
-            print('count=', count)
+            # print('count=', count)
     if count >= 1:
         print('repeat, loop pass')
         continue
-    '''
-    # 如果有重複資料先DROP
-    net = ['成交股數', '成交金額', '開盤價']
-    final.drop_duplicates(subset=net, keep='first', inplace=True)
 
-    # 如果有重複日期先DROP
-    dateTW = datetoTWslash(strdate)
-    print(historydata)
-    indexNames = historydata[historydata['日期'] == dateTW].index
-    historydata.drop(indexNames, inplace=True)
-    '''
-    # 計算KD值
     final = KD(final)
     # print(final)
     todir = path+'/112kdnewhistory/'
     tofilename = hislist.iat[i, 0]
     final.to_csv(todir+tofilename, encoding='utf-8-sig', index=None)
 
+
+'''
+    # 依欄位判定資料重複則DROP
+    net = ['日期']
+    final.drop_duplicates(subset=net, keep='last', inplace=True)
+    final = final.reset_index(drop=True)
+
+
+    # 如果有重複日期先DROP
+    dateTW = datetoTWslash(strdate)
+    # print(historydata)
+    indexNames = final[final['日期'] == dateTW].index
+    final.drop(indexNames, inplace=True)
+
     '''
+# 計算KD值
+
+
+'''
 
 
 '''

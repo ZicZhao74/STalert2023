@@ -50,6 +50,26 @@ def makehistorylist(historylistdir):
     historylist.to_csv("historylist.csv", index=False, encoding='utf-8-sig')
 
 
+def lowshadow(pf, twstrdate, stockname):
+    ShadowAlert = tuple()
+    try:
+        if pf.at[twstrdate, "開盤價"] > pf.at[twstrdate, "收盤價"]:
+            loshadow = (pf.at[twstrdate, "最高價"] -
+                        pf.at[twstrdate, "收盤價"]) / pf.at[twstrdate, "開盤價"]
+            # print('綠下影線=', loshadow)
+        else:
+            loshadow = (pf.at[twstrdate, "開盤價"] -
+                        pf.at[twstrdate, "最低價"]) / pf.at[twstrdate, "開盤價"]
+            # print('紅下影線=', loshadow)
+        if loshadow > 0.03:
+            print(stockname, '有長下影線', round(loshadow, 2))
+            ShadowAlert = '有長下影線=', round(loshadow, 2)
+    except:
+        print(stockname, 'shadow pass')
+        pass
+    return ShadowAlert
+
+
 # 要更新的月份
 # date = 20230101
 path = os.getcwd()
@@ -81,6 +101,8 @@ for i in range(0, len(hislist)):  # len(hislist)
     # print(thehistory)
     thehistory.to_csv(path+'/112kdnewhistory/' +
                       hislist.iat[i, 0], index=False, encoding='utf-8-sig')
+
+
 '''
 
     thehistory.reset_index(drop=True, inplace=True)
