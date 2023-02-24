@@ -9,7 +9,6 @@ filename = '/historylist.csv'
 fostocklist = pd.read_csv(indir+filename, thousands=',')
 win = 0
 lose = 0
-
 totalaveprofit = []
 # turn days trade
 for i in range(0, len(fostocklist)):  #
@@ -49,7 +48,7 @@ for i in range(0, len(fostocklist)):  #
                 d += 1
                 # print((len(data)-11), x, d)
                 # print(data.at[x + d, '收盤價'])
-            saleprice = data.at[x+d+1, '收盤價']
+            saleprice = data.at[x+d+1, '開盤價']
             # 排除因為到資料最後一天賣
             if x+d == (len(data)-10):
                 continue
