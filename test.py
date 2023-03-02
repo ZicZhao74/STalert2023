@@ -82,12 +82,16 @@ for i in range(0, len(hislist)):  # len(hislist)
     stock_nolist.append(hislists[1])
 stock_nolist = pd.DataFrame(stock_nolist)
 
-for i in range(0, len(hislist)):  # len(hislist)
+for i in range(0, 1):  # len(hislist)
 
     # 取得自有歷史資料
     thehistory = pd.read_csv(path+'/112kdnewhistory/' +
                              hislist.iat[i, 0])
-    print(hislist.iat[i, 0])
+    ave_volume = thehistory['成交股數'].mean()
+    print(ave_volume)
+    
+
+'''print(hislist.iat[i, 0])
     print(thehistory)
     thehistory.drop(thehistory.columns[thehistory.columns.str.contains(
         'unnamed', case=False)], axis=1, inplace=True)
@@ -100,10 +104,9 @@ for i in range(0, len(hislist)):  # len(hislist)
     #    thehistory.at[j, '日期'] = cf.datetoTWslash(thehistory.at[j, '日期'])
     # print(thehistory)
     thehistory.to_csv(path+'/112kdnewhistory/' +
-                      hislist.iat[i, 0], index=False, encoding='utf-8-sig')
-
-
-'''
+                      hislist.iat[i, 0], index=False, encoding='utf-8-sig') 
+                      
+                    
 
     thehistory.reset_index(drop=True, inplace=True)
     print(thehistory)
@@ -117,4 +120,5 @@ for i in range(0, len(hislist)):  # len(hislist)
     print(thehistory.tail(15))
     thehistory = thehistory.sort_values(by='日期')
     print(thehistory.tail(15))
-    '''
+
+'''

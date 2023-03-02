@@ -260,7 +260,7 @@ for i in range(0, len(fostocklist)):
         stinfo = twstrtodate, '\n', stock_no, stock_name, '\n'
         finalMes = stinfo + comMes
         print(finalMes)
-        # lineNotifyMessage(token, finalMes)
+        lineNotifyMessage(token, finalMes)
 
 
 '''

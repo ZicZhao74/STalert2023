@@ -1,53 +1,69 @@
 import pandas as pd
 import os
 name = 'stocklist'
-a = []
-path = os.getcwd()
 # 讀取歷史資料檔名列表
+path = os.getcwd()
 indir = path
 filename = '/historylist.csv'
 fostocklist = pd.read_csv(indir+filename, thousands=',')
+
+
+def kd_passavation(data, x):  # kd值三日鈍化判斷
+    if data.at[x, 'k'] > 0.8 and data.at[x-1, 'k'] > 0.8 and data.at[x-2, 'k'] > 0.8 and data.at[x-3, 'k'] < 0.8:
+        kd = True
+    else:
+        kd = False
+    return kd
+
+
+def low_shadow(data, x):  # 下影線3%判斷
+    lowerprice = min(data.at[x, "開盤價"], data.at[x, "收盤價"])
+    loshadow = (lowerprice - data.at[x, "最低價"]) / data.at[x, "開盤價"]
+    if loshadow > 0.03:
+        shadow = True
+    else:
+        shadow = False
+    return shadow
+
+
+def volume_explode(data, x):
+    ave_volume = data['成交股數'].mean()
+    if data.at[x, "成交股數"] > 4*ave_volume:
+        # print('volume explode')
+        explode = True
+    else:
+        explode = False
+    return explode
+
+
 win = 0
 lose = 0
 totalaveprofit = []
-# turn days trade
-for i in range(0, len(fostocklist)):  #
-    stockprofit = []
+for i in range(0, 20):  # len(fostocklist)
+
     hisfilename = fostocklist.iat[i, 0]
     print(hisfilename)
     data = pd.read_csv(path+'/112kdnewhistory/'+hisfilename,
                        thousands=',')  # , index_col=0
-    cd = 0
-
+    stockprofit = []
+    saleday = 0
     for x in range(11, len(data)-10):
         list = []
-        kd = False
-        shadow = False
-        # kd三日鈍化_data.at[x, 'k'] > 0.8 and data.at[x-1, 'k'] > 0.8 and data.at[x-2, 'k'] > 0.8 and data.at[x-3, 'k'] < 0.8
-        if data.at[x, 'k'] > 0.8 and data.at[x-1, 'k'] > 0.8 and data.at[x-2, 'k'] > 0.8 and data.at[x-3, 'k'] < 0.8:
-            kd = True
-        # 下影線>4%
-        if data.at[x, "開盤價"] > data.at[x, "收盤價"]:
-            loshadow = (data.at[x, "收盤價"] -
-                        data.at[x, "最低價"]) / data.at[x, "開盤價"]
-            # print('綠下影線=', loshadow)
-        else:
-            loshadow = (data.at[x, "開盤價"] -
-                        data.at[x, "最低價"]) / data.at[x, "開盤價"]
-            # print('紅下影線=', loshadow)
-        if loshadow > 0.03:
-            shadow = True
-
-        # 如果購入條件成立
-        if shadow == True:
+        # print("kd_passavation=", kd_passavation(data, x))
+        if x < saleday:
+            continue
+        # 如果指定購入條件成立
+        if volume_explode(data, x) == True:
             # print (data.at[x,'日期'],'alert')
+            # buyprice = data.at[x+1, '開盤價']
             buyprice = data.at[x+1, '開盤價']
         # 賣出條件_漲跌達7%
             d = 0
-            while ((data.at[x + d, '收盤價']-buyprice)/buyprice) < 0.1 and ((data.at[x + d, '收盤價']-buyprice)/buyprice) > -0.1 and x+d < len(data)-10:
+            while ((data.at[x + d, '收盤價']-buyprice)/buyprice) < 0.07 and ((data.at[x + d, '收盤價']-buyprice)/buyprice) > -0.07 and x+d < len(data)-10:
                 d += 1
                 # print((len(data)-11), x, d)
                 # print(data.at[x + d, '收盤價'])
+                saleday = x+d+1
             saleprice = data.at[x+d+1, '開盤價']
             # 排除因為到資料最後一天賣
             if x+d == (len(data)-10):
@@ -77,7 +93,8 @@ for i in range(0, len(fostocklist)):  #
 filt = [n for n in totalaveprofit if n < -0.01 or n > 0.01]
 # print("==============================\n所有股票收益=", filt)
 # print('filt=', filt)
-print('==============================\n所有股票平均收益=', sum(filt) / len(filt))
+if len(filt) > 0:
+    print('==============================\n所有股票平均收益=', sum(filt) / len(filt))
 
 
 '''

@@ -35,19 +35,21 @@ for i in range(0, len(fostocklist)):  #
     name = hisfilename.split(' ')
     st_no = name[1]
     print(st_no)
-    '''# 刪除價格資料用
-    data = pd.read_csv(path+'/112kdnewhistory/'+hisfilename,
-                       thousands=',', index_col=0)
+    # 刪除價格資料用
+    data = pd.read_csv('C:/Users/wayne/Desktop/112kdnewhistory/'+hisfilename,
+                       thousands=',')
     '''
     # 刪除FINACING資料用
     data = pd.read_csv(path+'/newfinancing/'+st_no+'stock_fiancing.csv',
                        thousands=',', index_col=0)
-    net = ['融資前日餘額', '融券今日餘額', '融券買進']
+                       '''
+    net = ['開盤價', '最高價']
     data.drop_duplicates(subset=net, keep='first', inplace=True)
     # data.drop_duplicates(inplace=True)
-    print(data)
-    data.to_csv(path+'/112newfinacing/'+st_no+'stock_financing.csv',
-                encoding='utf-8-sig', index_label=0)
+    # print(data)
+
+    data.to_csv('C:/Users/wayne/Desktop/112kdnewhistory/'+hisfilename,
+                encoding='utf-8-sig')
 '''
     filter = data['日期'] == '112/01/14'
     data['filter'] = filter
