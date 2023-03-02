@@ -84,6 +84,14 @@ def KD(final):
     return final
 
 
+def MA(data):
+    twentyMA = data['收盤價'].tail(20).mean()
+    sixtyMA = data['收盤價'].tail(60).mean()
+    data.at[len(data)-1, '20MA'] = twentyMA
+    data.at[len(data)-1, '60MA'] = sixtyMA
+    return data
+
+
 # 下載證交所資料 ------
 path = os.getcwd()
 link = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=open_data'
@@ -139,6 +147,7 @@ for i in range(0, len(stock_nolist)):  # len(stock_nolist)
         continue
 
     final = KD(final)
+    final = MA(final)
     # print(final)
     todir = path+'/112kdnewhistory/'
     tofilename = hislist.iat[i, 0]

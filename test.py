@@ -87,9 +87,11 @@ for i in range(0, 1):  # len(hislist)
     # 取得自有歷史資料
     thehistory = pd.read_csv(path+'/112kdnewhistory/' +
                              hislist.iat[i, 0])
-    ave_volume = thehistory['成交股數'].mean()
-    print(ave_volume)
-    
+    print(thehistory)
+    # ave_volume = thehistory['成交股數'].mean()
+    # print(ave_volume)
+    twenty = thehistory.tail(20)
+
 
 '''print(hislist.iat[i, 0])
     print(thehistory)
