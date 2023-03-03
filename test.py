@@ -82,45 +82,28 @@ for i in range(0, len(hislist)):  # len(hislist)
     stock_nolist.append(hislists[1])
 stock_nolist = pd.DataFrame(stock_nolist)
 
-for i in range(0, 1):  # len(hislist)
+for i in range(0, len(hislist)):  # len(hislist)
 
     # 取得自有歷史資料
     thehistory = pd.read_csv(path+'/112kdnewhistory/' +
                              hislist.iat[i, 0])
-    print(thehistory)
+    # print(thehistory)
     # ave_volume = thehistory['成交股數'].mean()
     # print(ave_volume)
     twenty = thehistory.tail(20)
-
-
-'''print(hislist.iat[i, 0])
+    thehistory['5MA'] = thehistory['收盤價'].rolling(5).mean()
+    thehistory['10MA'] = thehistory['收盤價'].rolling(10).mean()
+    thehistory['20MA'] = thehistory['收盤價'].rolling(20).mean()
     print(thehistory)
-    thehistory.drop(thehistory.columns[thehistory.columns.str.contains(
-        'unnamed', case=False)], axis=1, inplace=True)
-    thehistory.drop(thehistory.columns[thehistory.columns.str.contains(
-        '0', case=False)], axis=1, inplace=True)
+    # for j in range(20, len(thehistory)):
+    #     ma5 = thehistory.rolling(5).mean()
 
-    net = ['成交股數', '成交金額', '開盤價']
-    thehistory.drop_duplicates(subset=net, keep='first', inplace=True)
-    # for j in range(0, len(thehistory)):
-    #    thehistory.at[j, '日期'] = cf.datetoTWslash(thehistory.at[j, '日期'])
-    # print(thehistory)
+    #     twentyMA = data.at[j,'收盤價'].tail(20).mean()
+    # sixtyMA = data['收盤價'].tail(60).mean()
+    # data.at[len(data)-1, '20MA'] = twentyMA
+    # data.at[len(data)-1, '60MA'] = sixtyMA
+    print(path+'/112newhistory/' +
+          hislist.iat[i, 0])
+    print(thehistory)
     thehistory.to_csv(path+'/112kdnewhistory/' +
-                      hislist.iat[i, 0], index=False, encoding='utf-8-sig') 
-                      
-                    
-
-    thehistory.reset_index(drop=True, inplace=True)
-    print(thehistory)
-    thehistory.to_csv(path+'/112newhistory/' +
-                      hislist.iat[i, 0], index=False, encoding='utf-8-sig')
-
-    thehistory.set_index(pd.to_datetime(
-        thehistory['日期'], format='%Y/%m/%d'), inplace=True)
-    print(type(thehistory['日期']))
-    thehistory.sort_index()
-    print(thehistory.tail(15))
-    thehistory = thehistory.sort_values(by='日期')
-    print(thehistory.tail(15))
-
-'''
+                      hislist.iat[i, 0], index=None, encoding='utf-8-sig')

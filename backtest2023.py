@@ -28,8 +28,7 @@ def low_shadow(data, x):  # 下影線3%判斷
 
 def volume_explode(data, x):
     ave_volume = data['成交股數'].mean()
-    if data.at[x, "成交股數"] > 4*ave_volume:
-        # print('volume explode')
+    if data.at[x, "成交股數"] > 4*ave_volume:  # 超過平均交易量的四倍
         explode = True
     else:
         explode = False

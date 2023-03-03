@@ -85,10 +85,12 @@ def KD(final):
 
 
 def MA(data):
+    fiveMA = data['收盤價'].tail(5).mean()
+    tenMA = data['收盤價'].tail(10).mean()
     twentyMA = data['收盤價'].tail(20).mean()
-    sixtyMA = data['收盤價'].tail(60).mean()
+    data.at[len(data)-1, '5MA'] = fiveMA
+    data.at[len(data)-1, '10MA'] = tenMA
     data.at[len(data)-1, '20MA'] = twentyMA
-    data.at[len(data)-1, '60MA'] = sixtyMA
     return data
 
 
@@ -118,7 +120,7 @@ for i in range(0, len(hislist)):
     hislists = hislist.iat[i, 0].split()
     stock_nolist.append(hislists[1])
 
-for i in range(0, len(stock_nolist)):  # len(stock_nolist)
+for i in range(0, 2):  # len(stock_nolist)
     # 從今日交易結果data保留選擇的個股資料
     print(stock_nolist[i])
     filt = data['證券代號'] == stock_nolist[i]
@@ -148,7 +150,7 @@ for i in range(0, len(stock_nolist)):  # len(stock_nolist)
 
     final = KD(final)
     final = MA(final)
-    # print(final)
+    print(final)
     todir = path+'/112kdnewhistory/'
     tofilename = hislist.iat[i, 0]
     final.to_csv(todir+tofilename, encoding='utf-8-sig', index=None)
