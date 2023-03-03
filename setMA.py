@@ -94,7 +94,7 @@ for i in range(0, len(hislist)):  # len(hislist)
     thehistory['5MA'] = thehistory['收盤價'].rolling(5).mean()
     thehistory['10MA'] = thehistory['收盤價'].rolling(10).mean()
     thehistory['20MA'] = thehistory['收盤價'].rolling(20).mean()
-    print(thehistory)
+    # print(thehistory)
     # for j in range(20, len(thehistory)):
     #     ma5 = thehistory.rolling(5).mean()
 
@@ -103,7 +103,7 @@ for i in range(0, len(hislist)):  # len(hislist)
     # data.at[len(data)-1, '20MA'] = twentyMA
     # data.at[len(data)-1, '60MA'] = sixtyMA
     print(path+'/112newhistory/' +
-          hislist.iat[i, 0])
-    print(thehistory)
+          hislist.iat[i, 0], 'historyMA')
+    # print(thehistory)
     thehistory.to_csv(path+'/112kdnewhistory/' +
                       hislist.iat[i, 0], index=None, encoding='utf-8-sig')

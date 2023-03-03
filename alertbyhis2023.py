@@ -6,6 +6,11 @@ import time
 import random
 import comfunc as cf
 
+global path
+path = os.getcwd()
+global todate
+todate = datetime.datetime.now()
+
 
 def lineNotifyMessage(token, msg):
     headers = {
@@ -80,47 +85,8 @@ def filtpl(filtday, todate, periodlow):
     return periodlow.reset_index()
 
 
-def alert(stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow):
-    samedays = []
-    plsamedays = []
-    message = tuple()
-    message2 = tuple()
-    ''''''
-    for k in range(0, len(periodhigh)):
-        # print (todayprice,'vs',periodhigh.at[k, 'lhprice'],yesprice)
-        try:
-            if todayprice <= (periodhigh.at[k, 'lhprice'] * 1.00) and yesprice > (periodhigh.at[k, 'lhprice'] * 1.01):
-                periodhigh.at[k, 'lhcount'] = periodhigh.at[k, 'lhcount'] + 1
-                # if periodhigh.at[k, 'lhcount'] <= 2:
-                date = periodhigh.at[k, 'lhdate'].strftime('%Y-%m-%d')
-                samedays.append(date)
-            # else:
-            # print ('try work')
-        except:
-            print('periodhigh pass')
-            pass
-    if len(samedays) != 0:
-        message = 'high threshold,as', samedays
-        # print (message)
-    '''period low'''
-    for k in range(0, len(periodlow)):
-        # print (todayprice,'vs',periodhigh.at[k, 'lhprice'],yesprice)
-        try:
-            if todayprice <= (periodlow.at[k, 'plprice'] * 1.00) and yesprice > (periodlow.at[k, 'plprice'] * 1.01):
-                periodlow.at[k, 'plcount'] = periodlow.at[k, 'plcount'] + 1
-                # if periodhigh.at[k, 'lhcount'] <= 2:
-                date = periodlow.at[k, 'pldate'].strftime('%Y-%m-%d')
-                plsamedays.append(date)
-                # else:
-                #    print ('try work')
-        except:
-            print(stock_no, stock_name, 'pl pass')
-            pass
-    if len(plsamedays) != 0:
-        message1 = 'low threshold, as', plsamedays
-        # print (message1)
-
-    '''融資減少1%以上'''
+def finAlert(path, stock_no, strtodate, stryesdate):
+    Finmessage2 = tuple()
     try:
         findata = pd.read_csv(path + "/112newfinancing/" +
                               stock_no + "stock_financing.csv", index_col=0)
@@ -128,10 +94,8 @@ def alert(stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow):
             findata.at[strtodate, '融資今日餘額']
         perc = findelta / findata.at[strtodate, '融資今日餘額']
         if perc > 0.15:
-            message2 = 'financing sold=', findelta, '(', round(
+            Finmessage2 = 'financing sold=', findelta, '(', round(
                 perc, 2)*100, '%)'
-            # print(strtodate,message2)
-        # print('投信無大買賣')
     except:
         findata = pd.read_csv(path + "/112newfinancing/" +
                               stock_no + "stock_financing.csv", index_col=0)
@@ -139,15 +103,61 @@ def alert(stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow):
             findata.at[stryesdate, '融資今日餘額']
         perc = findelta / findata.at[stryesdate, '融資今日餘額']
         if perc > 0.15:
-            message2 = 'financing sold=', findelta, '(', round(
+            Finmessage2 = 'financing sold=', findelta, '(', round(
                 perc, 2)*100, '%)'
             # print(stryesdate,message2)
         # print('投信無大買賣')
+    return Finmessage2
 
-    twomes = message+message2
-    # print (almes)
-    # print (len(almes))
+
+def alert(stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow):
+    samedays = []
+    plsamedays = []
+    message = tuple()
+    message1 = tuple()
+    ''''''
+    for k in range(0, len(periodhigh)):
+        try:
+            if todayprice <= (periodhigh.at[k, 'lhprice'] * 1.00) and yesprice > (periodhigh.at[k, 'lhprice'] * 1.01):
+                periodhigh.at[k, 'lhcount'] = periodhigh.at[k, 'lhcount'] + 1
+                date = periodhigh.at[k, 'lhdate'].strftime('%Y-%m-%d')
+                samedays.append(date)
+        except:
+            print('periodhigh pass')
+            pass
+    if len(samedays) != 0:
+        message = 'high threshold,as', samedays
+
+    '''period low'''
+    for k in range(0, len(periodlow)):
+
+        try:
+            if todayprice <= (periodlow.at[k, 'plprice'] * 1.00) and yesprice > (periodlow.at[k, 'plprice'] * 1.01):
+                periodlow.at[k, 'plcount'] = periodlow.at[k, 'plcount'] + 1
+                date = periodlow.at[k, 'pldate'].strftime('%Y-%m-%d')
+                plsamedays.append(date)
+
+        except:
+            print(stock_no, stock_name, 'pl pass')
+            pass
+    if len(plsamedays) != 0:
+        message1 = 'low threshold, as', plsamedays
+
+    twomes = message+message1
     return twomes
+
+
+def periodpeak(path, filename):
+    # 依證券號碼取得峰值指標檔案
+    periodhigh = pd.read_csv(
+        path+'/periodhigh/' + filename+"periodhigh.csv", thousands=",")  # thounsands可以去千位符號
+    periodlow = pd.read_csv(
+        path+'/periodlow/'+filename+"periodlow.csv")
+    # 只查看最近N天內的指標
+    filtday = 60
+    periodhigh = filtph(filtday, todate, periodhigh)
+    periodlow = filtpl(filtday, todate, periodlow)
+    return periodhigh, periodlow
 
 
 def lowshadow(pf, twstrdate, stockname):
@@ -170,6 +180,19 @@ def lowshadow(pf, twstrdate, stockname):
     return ShadowAlert
 
 
+def volume_explode(histortdataI):
+    Vmesseage = tuple()
+    ave_volume = histortdataI['成交股數'].mean()
+    x = len(historydataI)
+    if histortdataI.at[x, "成交股數"] > 1*ave_volume:  # 超過平均交易量的3倍
+        VExplodeJ = True
+        Vmesseage = "交易量小於平均值"
+    else:
+        VExplodeJ = False
+        Vmesseage = ""
+    return VExplodeJ, Vmesseage
+
+
 def upshadow(pf, twstrdate, stockname):
     ShadowAlert = tuple()
     try:
@@ -182,7 +205,9 @@ def upshadow(pf, twstrdate, stockname):
                         pf.at[twstrdate, "收盤價"]) / pf.at[twstrdate, "開盤價"]
             # print('紅下影線=', loshadow)
         if upshadow > 0.03:
-            print(stockname, '有長上影線', round(upshadow, 2))
+            historydataI = pf.reset_index()
+            VExplodeJ, Vmesseage = volume_explode(historydataI)
+            print(stockname, '有長上影線', round(upshadow, 2), Vmesseage)
             ShadowAlert = '有長上影線=', round(upshadow, 2)
     except:
         print(stockname, 'shadow pass')
@@ -190,12 +215,12 @@ def upshadow(pf, twstrdate, stockname):
     return ShadowAlert
 
 
-def kdkpassive(historydata):
-    historydata = historydata.reset_index()
+def kdkpassive(historydataI):
+    # 原序號為時間，調整序號為編號
     list = []
     messeage = tuple()
     for y in range(1, 5):
-        list.append(historydata.at[len(historydata) - y, 'k'])
+        list.append(historydataI.at[len(historydataI) - y, 'k'])
     # print (list,sum(list))
     if list[0] > 0.8 and list[1] > 0.8 and list[2] > 0.8 and list[3] < 0.8:
         # print('kd的k值鈍化alert' )
@@ -203,63 +228,67 @@ def kdkpassive(historydata):
     return messeage
 
 
+def MAlowtouch(historydataI):
+    messeage = tuple()
+    # 原序號為時間，調整序號為編號
+    x = len(historydataI)
+    try:
+        if historydataI.at[x-3, '20MA'] < historydataI.at[x-3, '收盤價'] and historydataI.at[x-2, '20MA'] < historydataI.at[x-2, '收盤價'] and historydataI.at[x-1, '最低價'] < historydataI.at[x-1, '20MA'] < historydataI.at[x-1, '收盤價']:
+            messeage = '', '20MA有支撐'
+    except:
+        pass
+    return messeage
+
+
 '''
 ====================================main=====================================
 '''
-path = os.getcwd()
+
 # 讀取歷史資料檔名列表
-indir = path
 filename = '/historylist.csv'
-fostocklist = pd.read_csv(indir+filename, thousands=',')
-# 取得日期(有資料的)
-todate = datetime.datetime.now()
-indir = path+'/112kdnewhistory/'
-hisfilename = fostocklist.iat[1, 0]
-fulldir = indir+hisfilename
-historydata = pd.read_csv(fulldir, thousands=',', index_col="日期")
-todate, strtodate, twstrtodate, yesdate, stryesdate, twstryesdate = workday(
-    historydata, todate)
+fostocklist = pd.read_csv(path+filename, thousands=',')
 
 # 依列表序取得檔名
-for i in range(0, len(fostocklist)):
+for i in range(0, len(fostocklist)):  # len(fostocklist)
     # 打開歷史資料並取得今日與昨日金額
     hisfilename = fostocklist.iat[i, 0]
-    print(hisfilename)
-    # print (hisfilename)
-    indir = path+'/112kdnewhistory/'
-    fulldir = indir+hisfilename
+    fulldir = path+'/112kdnewhistory/'+hisfilename
     historydata = pd.read_csv(fulldir, thousands=',', index_col="日期")
-    # (historydata)
+    todate, strtodate, twstrtodate, yesdate, stryesdate, twstryesdate = workday(
+        historydata, todate)
     todayprice, yesprice = getprice(historydata, twstrtodate, twstryesdate)
-
-    # 依證券號碼取得指標並判定是否符合
-    indir = path+'/periodhigh/'
+# 取得個股編號與名稱
     hisfilename = hisfilename.split()
     stock_no = hisfilename[1]
     stock_name = hisfilename[2]
-    filename = stock_no+stock_name+"periodhigh.csv"
-    periodhigh = pd.read_csv(
-        indir + filename, thousands=",")  # thounsands可以去千位符號
-    periodlow = pd.read_csv(
-        path+'/periodlow/'+stock_no+stock_name+"periodlow.csv")
-    # print (periodlow)
-    # 查看融資
-    # 只查看最近N天內的指標
-    filtday = 60
-    periodhigh = filtph(filtday, todate, periodhigh)
-    periodlow = filtpl(filtday, todate, periodlow)
+    filename = stock_no+stock_name
+# 取得峰值檔案
+    periodhigh, periodlow = periodpeak(path, filename)
+# 峰值告警
     twomes = alert(
-        stock_no, hisfilename[2], periodhigh, todayprice, yesprice, periodlow)
+        stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow)
+# 融資告警
+    Finmessage2 = finAlert(path, stock_no, strtodate, stryesdate)
+# 下影線告警
     loShadowAlert = lowshadow(historydata, twstrtodate, stock_no+stock_name)
+# 上影線告警
     upShadowAlert = upshadow(historydata, twstrtodate, stock_no+stock_name)
-    kdmesseage = kdkpassive(historydata)
-    comMes = twomes + kdmesseage+loShadowAlert+upShadowAlert
-    token = 'YirsvmhRjT15zQMuSrEihN4i3upGFFJaulP9F6ly2EE'
+# KD值鈍化告警
+    historydataI = historydata.reset_index()
+    kdmesseage = kdkpassive(historydataI)
+# MA支撐告警
+    MAmessage = MAlowtouch(historydataI)
+    comMes = twomes + Finmessage2 + kdmesseage+loShadowAlert+upShadowAlert+MAmessage
+
+# 印出結果與LINE告警機制
+    print(hisfilename)
     if len(comMes) > 1:
         stinfo = tuple()
         stinfo = twstrtodate, '\n', stock_no, stock_name, '\n'
         finalMes = stinfo + comMes
         print(finalMes)
+
+        token = 'YirsvmhRjT15zQMuSrEihN4i3upGFFJaulP9F6ly2EE'
         lineNotifyMessage(token, finalMes)
 
 
