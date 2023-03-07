@@ -94,6 +94,7 @@ for i in range(0, len(hislist)):  # len(hislist)
     thehistory['5MA'] = thehistory['收盤價'].rolling(5).mean()
     thehistory['10MA'] = thehistory['收盤價'].rolling(10).mean()
     thehistory['20MA'] = thehistory['收盤價'].rolling(20).mean()
+    thehistory['60MA'] = thehistory['收盤價'].rolling(60).mean()
     # print(thehistory)
     # for j in range(20, len(thehistory)):
     #     ma5 = thehistory.rolling(5).mean()
