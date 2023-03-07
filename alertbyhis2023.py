@@ -117,17 +117,20 @@ def alert(stock_no, stock_name, periodhigh, todayprice, yesprice, periodlow):
     message1 = tuple()
     ''''''
     for k in range(0, len(periodhigh)):
-        try:
-            if todayprice <= (periodhigh.at[k, 'lhprice'] * 1.00) and yesprice > (periodhigh.at[k, 'lhprice'] * 1.01):
-                periodhigh.at[k, 'lhcount'] = periodhigh.at[k, 'lhcount'] + 1
-                date = periodhigh.at[k, 'lhdate'].strftime('%Y-%m-%d')
-                samedays.append(date)
-        except:
-            print('periodhigh pass')
-            pass
+        # try:
+
+        if todayprice <= (periodhigh.at[k, 'lhprice'] * 1.00) and yesprice > (periodhigh.at[k, 'lhprice'] * 1.01):
+            periodhigh.at[k, 'lhcount'] = periodhigh.at[k, 'lhcount'] + 1
+            date = periodhigh.at[k, 'lhdate'].strftime('%Y-%m-%d')
+            samedays.append(date)
+            # else:
+            # print('no periodhigh ')
+        # except:
+         #   print('periodhigh pass')
+          #  pass
     if len(samedays) != 0:
         message = 'high threshold,as', samedays
-
+        print(message)
     '''period low'''
     for k in range(0, len(periodlow)):
 
@@ -183,35 +186,32 @@ def lowshadow(pf, twstrdate, stockname):
 def volume_explode(histortdataI):
     Vmesseage = tuple()
     ave_volume = histortdataI['成交股數'].mean()
-    x = len(historydataI)
-    if histortdataI.at[x, "成交股數"] > 1*ave_volume:  # 超過平均交易量的3倍
+    y = len(historydataI)-1
+    if histortdataI.at[y, "成交股數"] > 1*ave_volume:  # 超過平均交易量的1倍
         VExplodeJ = True
-        Vmesseage = "交易量小於平均值"
     else:
         VExplodeJ = False
-        Vmesseage = ""
+        Vmesseage = ',', "交易量小於平均"
     return VExplodeJ, Vmesseage
 
 
-def upshadow(pf, twstrdate, stockname):
+def upshadow(pf, twstrdate, historydataI):
     ShadowAlert = tuple()
-    try:
-        if pf.at[twstrdate, "開盤價"] > pf.at[twstrdate, "收盤價"]:
-            upshadow = (pf.at[twstrdate, "最高價"] -
-                        pf.at[twstrdate, "開盤價"]) / pf.at[twstrdate, "開盤價"]
-            # print('綠下影線=', loshadow)
-        else:
-            upshadow = (pf.at[twstrdate, "最高價"] -
-                        pf.at[twstrdate, "收盤價"]) / pf.at[twstrdate, "開盤價"]
-            # print('紅下影線=', loshadow)
-        if upshadow > 0.03:
-            historydataI = pf.reset_index()
-            VExplodeJ, Vmesseage = volume_explode(historydataI)
-            print(stockname, '有長上影線', round(upshadow, 2), Vmesseage)
-            ShadowAlert = '有長上影線=', round(upshadow, 2)
-    except:
-        print(stockname, 'shadow pass')
-        pass
+
+    if pf.at[twstrdate, "開盤價"] > pf.at[twstrdate, "收盤價"]:
+        upshadow = (pf.at[twstrdate, "最高價"] -
+                    pf.at[twstrdate, "開盤價"]) / pf.at[twstrdate, "開盤價"]
+    else:
+        upshadow = (pf.at[twstrdate, "最高價"] -
+                    pf.at[twstrdate, "收盤價"]) / pf.at[twstrdate, "開盤價"]
+    if upshadow > 0.03:
+        # 上影線+交易量小於平均值、7%即交易=>勝率54%，多頭時期78%
+        historydataI = pf.reset_index()
+        VExplodeJ, Vmesseage = volume_explode(historydataI)
+        ShadowAlert = '有長上影線=', round(upshadow, 2), Vmesseage
+        # except:
+        #     print(stockname, 'shadow pass')
+        #     pass
     return ShadowAlert
 
 
@@ -234,10 +234,35 @@ def MAlowtouch(historydataI):
     x = len(historydataI)
     try:
         if historydataI.at[x-3, '20MA'] < historydataI.at[x-3, '收盤價'] and historydataI.at[x-2, '20MA'] < historydataI.at[x-2, '收盤價'] and historydataI.at[x-1, '最低價'] < historydataI.at[x-1, '20MA'] < historydataI.at[x-1, '收盤價']:
-            messeage = '', '20MA有支撐'
+            messeage = '/n', '20MA有支撐'
     except:
         pass
     return messeage
+
+
+def MAGap(historydataI, x):
+    a = historydataI.at[x, '20MA']-historydataI.at[x, '5MA']
+    return a
+
+
+def MAcross(historydataI, magapday):  # MA交叉，連續n日縮小最後翻正
+    messeagMG = tuple()
+    x = len(historydataI)-1
+    p = 0
+    for i in range(0, magapday):
+        if MAGap(historydataI, x-i) < MAGap(historydataI, x-i-1):
+            p += 1
+        else:
+            break
+    if MAGap(historydataI, x-1) > 0 and MAGap(historydataI, x) < 0:
+        p += 1
+    if p == magapday+1:
+        MAcrossJ = True
+        messeagMG = '\n', 'MA交叉'
+        # messeagMG = tuple(messeagMG)
+    else:
+        MAcrossJ = False
+    return MAcrossJ, messeagMG
 
 
 '''
@@ -262,6 +287,7 @@ for i in range(0, len(fostocklist)):  # len(fostocklist)
     stock_no = hisfilename[1]
     stock_name = hisfilename[2]
     filename = stock_no+stock_name
+    historydataI = historydata.reset_index()
 # 取得峰值檔案
     periodhigh, periodlow = periodpeak(path, filename)
 # 峰值告警
@@ -274,11 +300,13 @@ for i in range(0, len(fostocklist)):  # len(fostocklist)
 # 上影線告警
     upShadowAlert = upshadow(historydata, twstrtodate, stock_no+stock_name)
 # KD值鈍化告警
-    historydataI = historydata.reset_index()
     kdmesseage = kdkpassive(historydataI)
 # MA支撐告警
-    MAmessage = MAlowtouch(historydataI)
-    comMes = twomes + Finmessage2 + kdmesseage+loShadowAlert+upShadowAlert+MAmessage
+    MAsupmes = MAlowtouch(historydataI)
+# MA黃金交叉
+    MAGapJ, messeagMG = MAcross(historydataI, 4)
+    comMes = twomes + upShadowAlert + \
+        messeagMG + kdmesseage   # + Finmessage2+ MAsupmes+ loShadowAlert
 
 # 印出結果與LINE告警機制
     print(hisfilename)

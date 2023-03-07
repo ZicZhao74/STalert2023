@@ -16,10 +16,11 @@ def kd_passavation(data, x):  # kd值三日鈍化判斷
     return kd
 
 
-def low_shadow(data, x):  # 下影線3%判斷
+def low_shadow(data, x, thres):  # 下影線3%判斷
     lowerprice = min(data.at[x, "開盤價"], data.at[x, "收盤價"])
     loshadow = (lowerprice - data.at[x, "最低價"]) / data.at[x, "開盤價"]
-    if loshadow > 0.03:
+    thres = thres*0.01
+    if loshadow > thres:
         shadow = True
     else:
         shadow = False
@@ -36,9 +37,9 @@ def up_shadow(data, x):  # 上影線3%判斷
     return upshadowj
 
 
-def volume_explode(data, x):
+def volume_explode(data, x, multi):
     ave_volume = data['成交股數'].mean()
-    if data.at[x, "成交股數"] < 1*ave_volume:  # 超過平均交易量的3倍
+    if data.at[x, "成交股數"] > multi*ave_volume:  # 低於平均交易量的1倍
         explode = True
     else:
         explode = False
@@ -46,12 +47,12 @@ def volume_explode(data, x):
 
 
 def MAlowsupport(data, x):
-
-    if data.at[x-2, '20MA'] < data.at[x-2, '收盤價'] and data.at[x-1, '20MA'] < data.at[x-1, '收盤價'] and data.at[x, '最低價'] < data.at[x, '20MA'] < data.at[x, '收盤價']:
-        MAlowtouchJ = True
+    # 20MA有支撐
+    if data.at[x-2, '20MA'] < data.at[x-2, '收盤價'] and data.at[x-1, '20MA'] < data.at[x-1, '收盤價'] and data.at[x, '最低價'] <= data.at[x, '20MA'] < data.at[x, '收盤價']:
+        MAlowsupportJ = True
     else:
-        MAlowtouchJ = False
-    return MAlowtouchJ
+        MAlowsupportJ = False
+    return MAlowsupportJ
 
 
 def MApass(data, x):
@@ -63,70 +64,104 @@ def MApass(data, x):
     return MApassJ
 
 
+def MAGap(data, x):
+    a = data.at[x, '20MA']-data.at[x, '5MA']
+    return a
+
+
+def MAcross(data, x, magapday):  # x為日期 n為20MA-5MA，由負轉正的追蹤日
+
+    p = 0
+    for i in range(0, magapday):
+        if MAGap(data, x-i) < MAGap(data, x-i-1):
+            p += 1
+        else:
+            break
+    if MAGap(data, x-1) > 0 and MAGap(data, x) < 0:
+        p += 1
+    if p == magapday+1:
+        MAGapJ = True
+    else:
+        MAGapJ = False
+    return MAGapJ
+
+
 win = 0
 lose = 0
 totalaveprofit = []
-count = 0
-for i in range(0, len(fostocklist)):  # len(fostocklist)
 
-    hisfilename = fostocklist.iat[i, 0]
-    print(hisfilename)
-    data = pd.read_csv(path+'/112kdnewhistory/'+hisfilename,
-                       thousands=',')  # , index_col=0
-    stockprofit = []
-    saleday = 0
-    for x in range(150, len(data)-10):
-        list = []
-        # print("kd_passavation=", kd_passavation(data, x))
-# 賣出後才可再買入
-        if x < saleday:
-            continue
-# 指定購入條件
-    # 上影線+交易量<平均交易量，勝率57%
-        if up_shadow(data, x) == True and data.at[x, '收盤價'] > data.at[x, '開盤價'] and volume_explode(data, x) == False:
+thresperc = 7  # 買賣門檻值
 
-            buyprice = data.at[x+1, '開盤價']
-            count += 1
-# 賣出條件_漲跌達7%
-            d = 0
-            thres = 0.07
-            while ((data.at[x + d, '收盤價']-buyprice)/buyprice) < thres and ((data.at[x + d, '收盤價']-buyprice)/buyprice) > thres*-1 and x+d < len(data)-10:
-                d += 1
-                # print((len(data)-11), x, d)
-                # print(data.at[x + d, '收盤價'])
-                saleday = x+d+1
-            saleprice = data.at[x+d+1, '開盤價']
-            # 排除因為到資料最後一天賣
-            if x+d == (len(data)-10):
+for thresperc in range(4, 9):
+    thresperc += 1
+    thres = thresperc*0.01
+    count = 0
+    for i in range(0, len(fostocklist)):  # len(fostocklist)
+
+        hisfilename = fostocklist.iat[i, 0]
+        # print(hisfilename)
+        data = pd.read_csv(path+'/112kdnewhistory/'+hisfilename,
+                           thousands=',')  # , index_col=0
+        stockprofit = []
+        saleday = 0
+        for x in range(10, len(data)-10):
+            list = []
+            # print("kd_passavation=", kd_passavation(data, x))
+    # 賣出後才可再買入
+            if x < saleday:
                 continue
+    # 指定購入條件
+            # 上影線+交易量<平均交易量，勝率57%，多頭時期88%
+            # multi = 1  # n倍交易量為門檻
+            # if up_shadow(data, x) == True and volume_explode(data, x, multi) == False:
+                #    and data.at[x, '收盤價'] > data.at[x, '開盤價']
+            # MA交叉 MAgapday追蹤天數 高勝率
+            # if MAcross(data, x, 4) == True:
+                # low_shadow(data, x, 3) == True:
+            # KD鈍化
+            if MAlowsupport(data, x) and volume_explode(data, x, 2):
+                buyprice = data.at[x+1, '開盤價']
+                count += 1
+    # 賣出條件_漲跌達7%
+                d = 0
 
-        # 獲利與勝率統計
-            tradeprofit = round((saleprice - buyprice) / buyprice * 100, 2)
-            if tradeprofit > 0:
-                win += 1
-            else:
-                lose += 1
-            stockprofit.append(tradeprofit)
-            # profit[j] = round(((data.at[j + 5, '收盤價']) - todayprice),2)# / todayprice) * 100
-            print('購買日期與價格=', data.at[x, '日期'], buyprice,
-                  ',超過', thres*100,  '%的日期=', data.at[x+d, '日期'], '價格與差值=', saleprice, tradeprofit)
-            # cd = 10
+                while ((data.at[x + d, '收盤價']-buyprice)/buyprice) < thres and ((data.at[x + d, '收盤價']-buyprice)/buyprice) > thres*-1 and x+d < len(data)-10:
+                    d += 1
+                    # print((len(data)-11), x, d)
+                    # print(data.at[x + d, '收盤價'])
+                    saleday = x+d+1
+                saleprice = data.at[x+d+1, '開盤價']
+                # 排除因為到資料最後一天賣
+                if x+d == (len(data)-10):
+                    continue
 
-    aveprofit = sum(stockprofit) / (len(stockprofit) + 0.0001)
-    try:
-        print('average profit=', aveprofit, 'winning rate=',
-              win/(win+lose), '交易次數=', count)
-    except:
-        pass
-    totalaveprofit.append(aveprofit)
+            # 獲利與勝率統計
+                tradeprofit = round((saleprice - buyprice) / buyprice * 100, 2)
+                if tradeprofit > 0:
+                    win += 1
+                else:
+                    lose += 1
+                stockprofit.append(tradeprofit)
+                # profit[j] = round(((data.at[j + 5, '收盤價']) - todayprice),2)# / todayprice) * 100
+                # print('購買日期與價格=', data.at[x, '日期'], buyprice,
+                #       ',超過', thres*100,  '%的日期=', data.at[x+d, '日期'], '價格與差值=', saleprice, tradeprofit)
 
-# avetotalprofit = sum(totolaveprofit) / (len(totolaveprofit) + 0.0001)
-# print ('total average profit=',aveprofit)
-filt = [n for n in totalaveprofit if n < -0.01 or n > 0.01]
-# print("==============================\n所有股票收益=", filt)
-# print('filt=', filt)
-if len(filt) > 0:
-    print('==============================\n所有股票平均收益=', sum(filt) / len(filt))
+        aveprofit = sum(stockprofit) / (len(stockprofit) + 0.0001)
+        # try:
+        #     print('average profit=', aveprofit, 'winning rate=',
+        #           win/(win+lose), '交易次數=', count)
+        # except:
+        #     pass
+        totalaveprofit.append(aveprofit)
+    print('threshold=', thres, 'winning rate=',
+          win/(win+lose), '交易次數=', count)
+    # avetotalprofit = sum(totolaveprofit) / (len(totolaveprofit) + 0.0001)
+    # print ('total average profit=',aveprofit)
+    filt = [n for n in totalaveprofit if n < -0.01 or n > 0.01]
+    # print("==============================\n所有股票收益=", filt)
+    # print('filt=', filt)
+    if len(filt) > 0:
+        print('所有股票平均收益=', sum(filt) / len(filt))
 
 
 '''
