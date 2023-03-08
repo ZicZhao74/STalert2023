@@ -71,7 +71,7 @@ for i in range(0, len(infilename)):
     # 讀個股歷史資料並取得日期與價格列表
     historydatadir = path+'/112kdnewhistory/'
     tdate, finalprice = readcsvgetpf(historydatadir, infilename.iat[i, 0])
-    print(tdate, finalprice)
+    # print(tdate, finalprice)
     # print (tdate,finalprice)
     # 建立空白個股指標表
     phlist = makephlist()
@@ -80,4 +80,4 @@ for i in range(0, len(infilename)):
     phlist = fillphlist(period, finalprice, tdate, phlist)
     outdir = path+'/periodhigh/'
     savedata(phlist, infilename.iat[i, 0], outdir)
-    print(phlist)
+    # print(phlist)
