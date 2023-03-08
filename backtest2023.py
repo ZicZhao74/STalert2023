@@ -90,16 +90,16 @@ win = 0
 lose = 0
 totalaveprofit = []
 
-thresperc = 7  # 買賣門檻值
 
-for thresperc in range(4, 9):
+# thresperc  買賣門檻值
+for thresperc in range(7, 8):
     thresperc += 1
     thres = thresperc*0.01
     count = 0
     for i in range(0, len(fostocklist)):  # len(fostocklist)
 
         hisfilename = fostocklist.iat[i, 0]
-        # print(hisfilename)
+        print(hisfilename)
         data = pd.read_csv(path+'/112kdnewhistory/'+hisfilename,
                            thousands=',')  # , index_col=0
         stockprofit = []
@@ -116,10 +116,9 @@ for thresperc in range(4, 9):
             # if up_shadow(data, x) == True and volume_explode(data, x, multi) == False:
                 #    and data.at[x, '收盤價'] > data.at[x, '開盤價']
             # MA交叉 MAgapday追蹤天數 高勝率
-            # if MAcross(data, x, 4) == True:
-                # low_shadow(data, x, 3) == True:
-            # KD鈍化
-            if MAlowsupport(data, x) and volume_explode(data, x, 2):
+            if MAcross(data, x, 4) == True:
+                # # KD鈍化
+                # if MAlowsupport(data, x) and volume_explode(data, x, 2):
                 buyprice = data.at[x+1, '開盤價']
                 count += 1
     # 賣出條件_漲跌達7%
@@ -143,8 +142,9 @@ for thresperc in range(4, 9):
                     lose += 1
                 stockprofit.append(tradeprofit)
                 # profit[j] = round(((data.at[j + 5, '收盤價']) - todayprice),2)# / todayprice) * 100
-                # print('購買日期與價格=', data.at[x, '日期'], buyprice,
-                #       ',超過', thres*100,  '%的日期=', data.at[x+d, '日期'], '價格與差值=', saleprice, tradeprofit)
+
+                print('購買日期與價格=', data.at[x, '日期'], buyprice,
+                      ',超過', thres*100,  '%的日期=', data.at[x+d, '日期'], '價格與差值=', saleprice, tradeprofit)
 
         aveprofit = sum(stockprofit) / (len(stockprofit) + 0.0001)
         # try:
