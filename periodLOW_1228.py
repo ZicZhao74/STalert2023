@@ -4,7 +4,7 @@ import os
 
 def readcsvgetpf(indir, infilename):
     infulldir = indir + infilename
-    print(infulldir)
+    print(infilename)
     pf = pd.read_csv(infulldir, thousands=",")  # thounsands可以去千位符號
     for i in range(0, len(pf)):  # 民國轉西元
         pf.at[i, '日期'] = pf.at[i, '日期'].replace('111', '2022')
@@ -43,7 +43,7 @@ def fillphlist(period, finalprice, tdate, phlist):
                 'plprice': finalprice.iat[i, 0],
                 "plcount": 0
             }, ignore_index=True)
-            print('最新新低發生在=', tdate.iat[i, 0], finalprice.iat[i, 0])
+            # print('最新新低發生在=', tdate.iat[i, 0], finalprice.iat[i, 0])
     return phlist
 
 
@@ -53,7 +53,7 @@ def savedata(data, infilename, outdir):
     x = infilename.split()
     outfilename = x[1] + x[2] + 'periodlow.csv'
     fulldir = outdir + outfilename
-    print(fulldir)
+    # print(fulldir)
     data.to_csv(fulldir, index=False, encoding='utf-8-sig')
 
 
