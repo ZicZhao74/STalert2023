@@ -317,7 +317,7 @@ for i in range(0, len(fostocklist)):  # len(fostocklist)
         print(finalMes)
 
         token = 'YirsvmhRjT15zQMuSrEihN4i3upGFFJaulP9F6ly2EE'
-        lineNotifyMessage(token, finalMes)
+        # lineNotifyMessage(token, finalMes)
 
 
 '''
